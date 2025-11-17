@@ -32,14 +32,16 @@ uphold this code.
 
 ## 1. Getting Started: Local Setup
 
-This project uses **Poetry** to manage dependencies and **makim** to streamline
-development tasks.
+This project uses **Conda** to manage the base environment, **Poetry** (already
+included in that environment) to install project dependencies, and **makim** to
+streamline development tasks.
 
 ### Prerequisites
 
-- Python 3.11+
-- [Poetry](https://python-poetry.org/docs/#installation) installed on your
-  system.
+- [Conda](https://github.com/conda-forge/miniforge) (or mamba/micromamba)
+- Python 3.11+ (installed automatically by the provided Conda environment file)
+- [makim](https://github.com/pyapp-kit/makim) available on your `PATH` (e.g.,
+  via `pipx install makim`)
 
 ### Installation
 
@@ -51,11 +53,30 @@ development tasks.
     cd sdx
     ```
 
-2.  **Install Dependencies:** This command creates a virtual environment and
-    installs all packages from the `poetry.lock` file.
+2.  **Create the Conda Environment:** The `conda/dev.yaml` file defines the
+    canonical environment (including Poetry).
+
+    ```bash
+    conda env create -f conda/dev.yaml
+    ```
+
+3.  **Activate the Environment:**
+
+    ```bash
+    conda activate sdx
+    ```
+
+4.  **Install Dependencies with Poetry:** (No `poetry shell` is required because
+    the Conda environment already provides Python and Poetry.)
 
     ```bash
     poetry install
+    ```
+
+5.  **(Optional) Enable Git Hooks Locally:**
+
+    ```bash
+    pre-commit install
     ```
 
 3.  **Set Up the Database:** Our `makim` task runner simplifies database setup.
@@ -142,18 +163,16 @@ configured in `.pre-commit-config.yaml`.
 
 ### Running Tests
 
-Our test suite uses `pytest`.
+Unit tests are orchestrated via `makim` and ultimately run `pytest`.
 
-- **Run All Tests:**
+- **Run Unit Tests:**
 
   ```bash
-  makim test.run
+  makim tests.unit
   ```
 
-- **Run Tests with Coverage Report:**
-  ```bash
-  makim test.coverage
-  ```
+  Refer to `.makim.yaml` for additional test targets (e.g., coverage or specific
+  suites).
 
 ---
 
