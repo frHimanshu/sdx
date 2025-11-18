@@ -29,7 +29,7 @@ class Deidentifier:
         }
         nlp_engine_provider = NlpEngineProvider(nlp_configuration=nlp_config)
         nlp_engine = nlp_engine_provider.create_engine()
-        
+
         self.analyzer = AnalyzerEngine(nlp_engine=nlp_engine)
         self.anonymizer = AnonymizerEngine()  # type: ignore[no-untyped-call]
 
