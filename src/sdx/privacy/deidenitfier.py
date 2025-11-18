@@ -56,7 +56,7 @@ class Deidentifier:
                 continue
 
             # Keep recognizers that don't match the name of the new one.
-            if entity_name not in rec.supported_entities:
+            if entity_name not in rec.supported_entities:  # type: ignore[index]
                 recognizers_to_keep.append(rec)
 
         # Replace the registry's list with the filtered list.

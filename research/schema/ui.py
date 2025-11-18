@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PatientBase(BaseModel):
@@ -28,10 +28,7 @@ class Patient(PatientBase):
     uuid: str = Field(..., max_length=36)
     consultations: List[Consultation] = []
 
-    class Config:
-        """Pydantic config."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ConsultationBase(BaseModel):
@@ -68,10 +65,7 @@ class Consultation(ConsultationBase):
     selected_diagnoses: List[ConsultationDiagnosis] = []
     selected_exams: List[ConsultationExam] = []
 
-    class Config:
-        """Pydantic config."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DiagnosisBase(BaseModel):
@@ -91,10 +85,7 @@ class Diagnosis(DiagnosisBase):
 
     id: int
 
-    class Config:
-        """Pydantic config."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ExamBase(BaseModel):
@@ -114,10 +105,7 @@ class Exam(ExamBase):
 
     id: int
 
-    class Config:
-        """Pydantic config."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ConsultationDiagnosisBase(BaseModel):
@@ -143,10 +131,7 @@ class ConsultationDiagnosis(ConsultationDiagnosisBase):
     consultation: Consultation
     diagnosis: Diagnosis
 
-    class Config:
-        """Pydantic config."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ConsultationExamBase(BaseModel):
@@ -173,10 +158,7 @@ class ConsultationExam(ConsultationExamBase):
     consultation: Consultation
     exam: Exam
 
-    class Config:
-        """Pydantic config."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Rebuild models to resolve forward references
