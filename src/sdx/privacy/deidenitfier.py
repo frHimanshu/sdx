@@ -43,7 +43,9 @@ class Deidentifier:
             )
             # Fallback to alternate model, then default AnalyzerEngine
             alt_model: str = (
-                'en_core_web_lg' if model_name != 'en_core_web_lg' else 'en_core_web_sm'
+                'en_core_web_lg'
+                if model_name != 'en_core_web_lg'
+                else 'en_core_web_sm'
             )
             try:
                 provider = NlpEngineProvider(
