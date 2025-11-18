@@ -60,16 +60,19 @@ streamline development tasks.
     conda env create -f conda/dev.yaml
     ```
 
-3.  **Activate the Environment:**
+3.  **Activate the Environment:** (If you customized the environment name inside
+    `conda/dev.yaml`, use that name here instead of `sdx`.)
 
     ```bash
     conda activate sdx
     ```
 
-4.  **Install Dependencies with Poetry:** (No `poetry shell` is required because
-    the Conda environment already provides Python and Poetry.)
+4.  **Install Dependencies with Poetry:** Disable Poetry’s virtualenv creation
+    so packages (and CLI tools such as `pre-commit`) are installed directly into
+    the active Conda environment, then install.
 
     ```bash
+    poetry config virtualenvs.create false --local
     poetry install
     ```
 
@@ -79,7 +82,7 @@ streamline development tasks.
     pre-commit install
     ```
 
-3.  **Set Up the Database:** Our `makim` task runner simplifies database setup.
+6.  **Set Up the Database:** Our `makim` task runner simplifies database setup.
     This command runs Alembic to create the `db.sqlite` file and applies all
     migrations.
 
@@ -87,7 +90,7 @@ streamline development tasks.
     makim db.setup
     ```
 
-4.  **(Optional) Set Up API Keys:** Certain tests and features that interact
+7.  **(Optional) Set Up API Keys:** Certain tests and features that interact
     with external services (e.g., OpenAI) require API keys. Create a `.env` file
     at `sdx/.envs/.env` and add your keys there.
     ```dotenv
