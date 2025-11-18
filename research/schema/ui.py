@@ -162,7 +162,14 @@ class ConsultationExam(ConsultationExamBase):
 
 
 # Rebuild models to resolve forward references
-Patient.model_rebuild()
-Consultation.model_rebuild()
-ConsultationDiagnosis.model_rebuild()
-ConsultationExam.model_rebuild()
+def rebuild_models() -> None:
+    """Rebuild Pydantic models to resolve forward references."""
+    Patient.model_rebuild()
+    Consultation.model_rebuild()
+    Diagnosis.model_rebuild()
+    Exam.model_rebuild()
+    ConsultationDiagnosis.model_rebuild()
+    ConsultationExam.model_rebuild()
+
+
+rebuild_models()

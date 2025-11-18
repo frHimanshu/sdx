@@ -17,6 +17,17 @@ from presidio_anonymizer.entities import OperatorConfig
 logger = logging.getLogger(__name__)
 
 
+def _allow_degraded() -> bool:
+    """Check if degraded PII detection is allowed via env var."""
+    val: str = os.getenv('PRESIDIO_ALLOW_DEGRADED', 'false').strip().lower()
+    return val in ('1', 'true', 'yes')
+
+
+def _select_alt_model(current: str) -> str:
+    """Select a reasonable fallback spaCy model."""
+    return 'en_core_web_md' if current != 'en_core_web_md' else 'en_core_web_sm'
+
+
 class Deidentifier:
     """A class for PII detection and de-identification using Presidio."""
 
@@ -25,6 +36,10 @@ class Deidentifier:
 
         Returns:
             AnalyzerEngine: Configured analyzer engine with fallback support.
+
+        Raises:
+            RuntimeError: If spaCy models fail to load and degraded mode is not
+                allowed.
         """
         model_name: str = os.getenv('PRESIDIO_SPACY_MODEL', 'en_core_web_sm')
         cfg: Dict[str, Any] = {
@@ -36,17 +51,13 @@ class Deidentifier:
             nlp_engine = provider.create_engine()
             logger.info(f'Using spaCy model: {model_name}')
             return AnalyzerEngine(nlp_engine=nlp_engine, supported_languages=['en'])
-        except Exception as e:
+        except (ImportError, OSError, ValueError) as e:
             logger.warning(
                 f'Failed to load spaCy model {model_name}: {e}. '
                 'Attempting fallback...'
             )
             # Fallback to alternate model, then default AnalyzerEngine
-            alt_model: str = (
-                'en_core_web_lg'
-                if model_name != 'en_core_web_lg'
-                else 'en_core_web_sm'
-            )
+            alt_model: str = _select_alt_model(model_name)
             try:
                 provider = NlpEngineProvider(
                     nlp_configuration={
@@ -62,13 +73,29 @@ class Deidentifier:
                 return AnalyzerEngine(
                     nlp_engine=nlp_engine, supported_languages=['en']
                 )
-            except Exception as e2:
+            except (ImportError, OSError, ValueError) as e2:
                 logger.error(
                     f'Failed to load fallback model {alt_model}: {e2}. '
-                    'Using default AnalyzerEngine without spaCy model. '
+                    'Using default AnalyzerEngine without spaCy model is '
+                    'disabled by default.'
+                )
+                if not _allow_degraded():
+                    raise RuntimeError(
+                        'Failed to initialize spaCy NLP engine; refusing to '
+                        'degrade PII detection. Set PRESIDIO_ALLOW_DEGRADED=true '
+                        'to allow fallback without spaCy.'
+                    ) from e2
+                logger.error(
+                    'PRESIDIO_ALLOW_DEGRADED is true. Proceeding without spaCy. '
                     'PII detection quality will be significantly reduced.'
                 )
-                return AnalyzerEngine(supported_languages=['en'])
+                try:
+                    return AnalyzerEngine(supported_languages=['en'])
+                except Exception as e3:
+                    raise RuntimeError(
+                        'Presidio AnalyzerEngine initialization failed without '
+                        'spaCy.'
+                    ) from e3
 
     def __init__(self) -> None:
         """Initialize the Presidio Analyzer and Anonymizer engines.
