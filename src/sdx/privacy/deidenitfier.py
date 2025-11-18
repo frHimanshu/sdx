@@ -24,8 +24,8 @@ class Deidentifier:
         """
         # Configure to use smaller spacy model to avoid disk space issues
         nlp_config = {
-            "nlp_engine_name": "spacy",
-            "models": [{"lang_code": "en", "model_name": "en_core_web_sm"}],
+            'nlp_engine_name': 'spacy',
+            'models': [{'lang_code': 'en', 'model_name': 'en_core_web_sm'}],
         }
         nlp_engine_provider = NlpEngineProvider(nlp_configuration=nlp_config)
         nlp_engine = nlp_engine_provider.create_engine()
