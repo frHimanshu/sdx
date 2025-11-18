@@ -18,9 +18,9 @@ class Deidentifier:
 
     def __init__(self) -> None:
         """Initialize the Presidio Analyzer and Anonymizer engines.
-        
-        Uses en_core_web_sm (small model) instead of en_core_web_lg (large model)
-        to reduce disk space requirements and download time.
+
+        Uses en_core_web_sm (small model) instead of en_core_web_lg
+        (large model) to reduce disk space requirements and download time.
         """
         # Configure to use smaller spacy model to avoid disk space issues
         nlp_config = {
