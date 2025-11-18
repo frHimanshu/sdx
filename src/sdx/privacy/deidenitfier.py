@@ -8,6 +8,7 @@ from presidio_analyzer import (
     PatternRecognizer,
     RecognizerResult,
 )
+from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine
 from presidio_anonymizer.entities import OperatorConfig
 
@@ -16,8 +17,20 @@ class Deidentifier:
     """A class for PII detection and de-identification using Presidio."""
 
     def __init__(self) -> None:
-        """Initialize the Presidio Analyzer and Anonymizer engines."""
-        self.analyzer = AnalyzerEngine()
+        """Initialize the Presidio Analyzer and Anonymizer engines.
+        
+        Uses en_core_web_sm (small model) instead of en_core_web_lg (large model)
+        to reduce disk space requirements and download time.
+        """
+        # Configure to use smaller spacy model to avoid disk space issues
+        nlp_config = {
+            "nlp_engine_name": "spacy",
+            "models": [{"lang_code": "en", "model_name": "en_core_web_sm"}],
+        }
+        nlp_engine_provider = NlpEngineProvider(nlp_configuration=nlp_config)
+        nlp_engine = nlp_engine_provider.create_engine()
+        
+        self.analyzer = AnalyzerEngine(nlp_engine=nlp_engine)
         self.anonymizer = AnonymizerEngine()  # type: ignore[no-untyped-call]
 
     def add_custom_recognizer(
