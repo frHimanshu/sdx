@@ -1,6 +1,8 @@
 """A module for PII detection and de-identification."""
 
-from typing import Dict, List, Optional
+import logging
+import os
+from typing import Any, Dict, List, Optional
 
 from presidio_analyzer import (
     AnalyzerEngine,
@@ -12,25 +14,68 @@ from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine
 from presidio_anonymizer.entities import OperatorConfig
 
+logger = logging.getLogger(__name__)
+
 
 class Deidentifier:
     """A class for PII detection and de-identification using Presidio."""
 
+    def _create_analyzer(self) -> AnalyzerEngine:
+        """Create AnalyzerEngine with configurable spaCy model and safe fallbacks.
+
+        Returns:
+            AnalyzerEngine: Configured analyzer engine with fallback support.
+        """
+        model_name: str = os.getenv('PRESIDIO_SPACY_MODEL', 'en_core_web_sm')
+        cfg: Dict[str, Any] = {
+            'nlp_engine_name': 'spacy',
+            'models': [{'lang_code': 'en', 'model_name': model_name}],
+        }
+        try:
+            provider = NlpEngineProvider(nlp_configuration=cfg)
+            nlp_engine = provider.create_engine()
+            logger.info(f'Using spaCy model: {model_name}')
+            return AnalyzerEngine(nlp_engine=nlp_engine, supported_languages=['en'])
+        except Exception as e:
+            logger.warning(
+                f'Failed to load spaCy model {model_name}: {e}. '
+                'Attempting fallback...'
+            )
+            # Fallback to alternate model, then default AnalyzerEngine
+            alt_model: str = (
+                'en_core_web_lg' if model_name != 'en_core_web_lg' else 'en_core_web_sm'
+            )
+            try:
+                provider = NlpEngineProvider(
+                    nlp_configuration={
+                        'nlp_engine_name': 'spacy',
+                        'models': [{'lang_code': 'en', 'model_name': alt_model}],
+                    }
+                )
+                nlp_engine = provider.create_engine()
+                logger.warning(
+                    f'Falling back to spaCy model: {alt_model}. '
+                    'PII detection quality may be reduced.'
+                )
+                return AnalyzerEngine(
+                    nlp_engine=nlp_engine, supported_languages=['en']
+                )
+            except Exception as e2:
+                logger.error(
+                    f'Failed to load fallback model {alt_model}: {e2}. '
+                    'Using default AnalyzerEngine without spaCy model. '
+                    'PII detection quality will be significantly reduced.'
+                )
+                return AnalyzerEngine(supported_languages=['en'])
+
     def __init__(self) -> None:
         """Initialize the Presidio Analyzer and Anonymizer engines.
 
-        Uses en_core_web_sm (small model) instead of en_core_web_lg
-        (large model) to reduce disk space requirements and download time.
+        Uses configurable spaCy model (default: en_core_web_sm) with automatic
+        fallbacks to ensure robustness. Model can be configured via
+        PRESIDIO_SPACY_MODEL environment variable.
         """
-        # Configure to use smaller spacy model to avoid disk space issues
-        nlp_config = {
-            'nlp_engine_name': 'spacy',
-            'models': [{'lang_code': 'en', 'model_name': 'en_core_web_sm'}],
-        }
-        nlp_engine_provider = NlpEngineProvider(nlp_configuration=nlp_config)
-        nlp_engine = nlp_engine_provider.create_engine()
-
-        self.analyzer = AnalyzerEngine(nlp_engine=nlp_engine)
+        self.analyzer = self._create_analyzer()
         self.anonymizer = AnonymizerEngine()  # type: ignore[no-untyped-call]
 
     def add_custom_recognizer(

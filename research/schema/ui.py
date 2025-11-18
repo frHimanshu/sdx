@@ -26,7 +26,7 @@ class Patient(PatientBase):
 
     id: int
     uuid: str = Field(..., max_length=36)
-    consultations: List[Consultation] = []
+    consultations: List[Consultation] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -62,8 +62,8 @@ class Consultation(ConsultationBase):
     id: int
     patient_id: int
     patient: Patient
-    selected_diagnoses: List[ConsultationDiagnosis] = []
-    selected_exams: List[ConsultationExam] = []
+    selected_diagnoses: List[ConsultationDiagnosis] = Field(default_factory=list)
+    selected_exams: List[ConsultationExam] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
