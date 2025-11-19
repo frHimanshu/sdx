@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+import pytest
+
+from pydantic import ValidationError
 from sdx.schema.fhirx import (
     Annotation,
     ClinicalImpression,
@@ -22,15 +25,14 @@ from sdx.schema.human_evaluations import (
 
 def test_patient_language_field_round_trip() -> None:
     """Patient instances keep the BaseLanguage tag intact."""
-    patient = Patient.model_construct(language='es-MX')
+    patient = Patient.model_validate({'language': 'es-MX'})
     assert patient.language == 'es-MX'
 
 
 def test_encounter_canonical_episode_and_language() -> None:
     """Encounter stores canonicalEpisodeId and BaseLanguage details."""
-    encounter = Encounter.model_construct(
-        language='en-US',
-        canonicalEpisodeId='episode-123',
+    encounter = Encounter.model_validate(
+        {'language': 'en-US', 'canonicalEpisodeId': 'episode-123'}
     )
 
     assert encounter.language == 'en-US'
@@ -39,11 +41,13 @@ def test_encounter_canonical_episode_and_language() -> None:
 
 def test_other_fhir_resources_share_language_field() -> None:
     """Remaining subclasses also expose the common language field."""
-    observation = Observation.model_construct(language='fr-FR')
-    condition = Condition.model_construct(language='pt-BR')
-    procedure = Procedure.model_construct(language='de-DE')
-    clinical_impression = ClinicalImpression.model_construct(language='it-IT')
-    annotation = Annotation.model_construct(language='ja-JP')
+    observation = Observation.model_validate({'language': 'fr-FR'})
+    condition = Condition.model_validate({'language': 'pt-BR'})
+    procedure = Procedure.model_validate({'language': 'de-DE'})
+    clinical_impression = ClinicalImpression.model_validate(
+        {'language': 'it-IT'}
+    )
+    annotation = Annotation.model_validate({'language': 'ja-JP'})
 
     assert observation.language == 'fr-FR'
     assert condition.language == 'pt-BR'
@@ -94,3 +98,9 @@ def test_human_evaluations_models_support_language() -> None:
     assert evaluation.ratings['accuracy'] == 5
     assert dataset_descriptor.language == 'en-US'
     assert dataset_descriptor.url.endswith('ds-1')
+
+
+def test_patient_language_validation() -> None:
+    """Patient.language enforces BaseLanguage validation."""
+    with pytest.raises(ValidationError):
+        Patient.model_validate({'language': 'not-a-valid-tag'})

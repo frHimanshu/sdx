@@ -2,7 +2,7 @@
 
 import pytest
 
-from sdx.privacy.deidenitfier import Deidentifier
+from sdx.privacy.deidentifier import Deidentifier
 
 PII_TEST_CASES = [
     ('T1_SIMPLE_EMAIL_NAME', 'Contact Jane Doe at jane.d@example.com.', True),
@@ -169,40 +169,24 @@ def test_unsupported_strategy_raises_error(deidentifier: Deidentifier):
 
 def test_select_alt_model():
     """Test: Verify fallback model selection logic."""
-    from sdx.privacy.deidenitfier import _select_alt_model
+    from sdx.privacy.deidentifier import _select_alt_model
 
     assert _select_alt_model('en_core_web_sm') == 'en_core_web_md'
     assert _select_alt_model('en_core_web_md') == 'en_core_web_sm'
     assert _select_alt_model('en_core_web_lg') == 'en_core_web_md'
 
 
-def test_allow_degraded():
+def test_allow_degraded(monkeypatch: pytest.MonkeyPatch):
     """Test: Verify degraded mode environment variable parsing."""
-    import os
+    from sdx.privacy.deidentifier import _allow_degraded
 
-    from sdx.privacy.deidenitfier import _allow_degraded
+    monkeypatch.delenv('PRESIDIO_ALLOW_DEGRADED', raising=False)
+    assert _allow_degraded() is True
 
-    # Test default (false)
-    if 'PRESIDIO_ALLOW_DEGRADED' in os.environ:
-        original = os.environ['PRESIDIO_ALLOW_DEGRADED']
-        del os.environ['PRESIDIO_ALLOW_DEGRADED']
-    else:
-        original = None
+    for val in ('1', 'true', 'yes', 'TRUE', 'YES', 'True'):
+        monkeypatch.setenv('PRESIDIO_ALLOW_DEGRADED', val)
+        assert _allow_degraded() is True
 
-    try:
+    for val in ('0', 'false', 'no', 'FALSE', 'No'):
+        monkeypatch.setenv('PRESIDIO_ALLOW_DEGRADED', val)
         assert _allow_degraded() is False
-
-        # Test various true values
-        for val in ('1', 'true', 'yes', 'TRUE', 'YES', 'True'):
-            os.environ['PRESIDIO_ALLOW_DEGRADED'] = val
-            assert _allow_degraded() is True
-
-        # Test false values
-        for val in ('0', 'false', 'no', 'FALSE', 'No'):
-            os.environ['PRESIDIO_ALLOW_DEGRADED'] = val
-            assert _allow_degraded() is False
-    finally:
-        if original is not None:
-            os.environ['PRESIDIO_ALLOW_DEGRADED'] = original
-        elif 'PRESIDIO_ALLOW_DEGRADED' in os.environ:
-            del os.environ['PRESIDIO_ALLOW_DEGRADED']

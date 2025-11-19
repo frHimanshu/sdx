@@ -21,7 +21,21 @@ from pydantic import ValidationError
 
 from sdx.schema.clinical_outputs import LLMDiagnosis
 
-load_dotenv(Path(__file__).parents[3] / '.envs' / '.env')
+
+def _load_env_files() -> None:
+    """Load environment variables from supported .env paths."""
+    project_root = Path(__file__).parents[3]
+    legacy_root = project_root / 'src' / 'sdx'
+    candidates = [
+        project_root / '.envs' / '.env',
+        legacy_root / '.envs' / '.env',
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            load_dotenv(candidate, override=False)
+
+
+_load_env_files()
 
 _MODEL_NAME = os.getenv('OPENAI_MODEL', 'o4-mini')
 _client = OpenAI(api_key=os.getenv('OPENAI_API_KEY', ''))

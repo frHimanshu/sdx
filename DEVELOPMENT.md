@@ -92,7 +92,9 @@ streamline development tasks.
 
 7.  **(Optional) Set Up API Keys:** Certain tests and features that interact
     with external services (e.g., OpenAI) require API keys. Create a `.env` file
-    at `.envs/.env` (project root) and add your keys there.
+    at `.envs/.env` (project root) and add your keys there. For backward
+    compatibility the application will also look for the legacy path
+    `src/sdx/.envs/.env`, so you can gradually migrate existing setups.
     ```dotenv
     # In .envs/.env
     OPENAI_API_KEY="your-key-here"

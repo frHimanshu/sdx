@@ -22,19 +22,28 @@ from research.models.repositories import ResearchRepository
 from research.models.ui import Base
 
 
+def _dotenv_candidates() -> list[Path]:
+    """Return supported .env search paths (new and legacy)."""
+    root = Path(__file__).parents[1]
+    return [
+        root / '.envs' / '.env',
+        root / 'src' / 'sdx' / '.envs' / '.env',
+    ]
+
+
 @pytest.fixture
 def env() -> dict[str, str | None]:
-    """Return a fixture for the environment variables from .env file."""
-    # This assumes a .envs/.env file at the project root
-    dotenv_path = Path(__file__).parents[1] / '.envs' / '.env'
-    if not dotenv_path.exists():
-        warnings.warn(
-            f"'.env' file not found at {dotenv_path}. Some "
-            'tests requiring environment variables might fail or be skipped.'
-        )
-        return {}
-    load_dotenv(dotenv_path=dotenv_path)
-    return dotenv_values(dotenv_path)
+    """Return a fixture for the environment variables from .env files."""
+    for dotenv_path in _dotenv_candidates():
+        if dotenv_path.exists():
+            load_dotenv(dotenv_path=dotenv_path)
+            return dotenv_values(dotenv_path)
+
+    warnings.warn(
+        "'.env' file not found in .envs/.env or src/sdx/.envs/.env. Some "
+        'tests requiring environment variables might fail or be skipped.'
+    )
+    return {}
 
 
 @pytest.fixture
