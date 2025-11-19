@@ -62,7 +62,9 @@ class Consultation(ConsultationBase):
     id: int
     patient_id: int
     patient: Patient
-    selected_diagnoses: List[ConsultationDiagnosis] = Field(default_factory=list)
+    selected_diagnoses: List[ConsultationDiagnosis] = Field(
+        default_factory=list
+    )
     selected_exams: List[ConsultationExam] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)

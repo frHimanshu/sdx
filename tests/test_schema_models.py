@@ -21,15 +21,13 @@ from sdx.schema.human_evaluations import (
 
 
 def test_patient_language_field_round_trip() -> None:
-    """Patient inherits the BaseLanguage mixin and preserves language values."""
-
+    """Patient instances keep the BaseLanguage tag intact."""
     patient = Patient.model_construct(language='es-MX')
     assert patient.language == 'es-MX'
 
 
 def test_encounter_canonical_episode_and_language() -> None:
-    """Encounter adds canonicalEpisodeId while keeping BaseLanguage behavior."""
-
+    """Encounter stores canonicalEpisodeId and BaseLanguage details."""
     encounter = Encounter.model_construct(
         language='en-US',
         canonicalEpisodeId='episode-123',
@@ -40,8 +38,7 @@ def test_encounter_canonical_episode_and_language() -> None:
 
 
 def test_other_fhir_resources_share_language_field() -> None:
-    """Sanity-check remaining subclasses that only add BaseLanguage."""
-
+    """Remaining subclasses also expose the common language field."""
     observation = Observation.model_construct(language='fr-FR')
     condition = Condition.model_construct(language='pt-BR')
     procedure = Procedure.model_construct(language='de-DE')
@@ -56,8 +53,7 @@ def test_other_fhir_resources_share_language_field() -> None:
 
 
 def test_human_evaluations_models_support_language() -> None:
-    """Instances from human_evaluations set and expose the language field."""
-
+    """Human evaluation models surface the optional language attribute."""
     timestamp = datetime(2024, 1, 1, tzinfo=timezone.utc)
     ai_output = AIOutput(
         id='out-1',
@@ -98,4 +94,3 @@ def test_human_evaluations_models_support_language() -> None:
     assert evaluation.ratings['accuracy'] == 5
     assert dataset_descriptor.language == 'en-US'
     assert dataset_descriptor.url.endswith('ds-1')
-

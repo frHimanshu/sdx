@@ -179,6 +179,7 @@ def test_select_alt_model():
 def test_allow_degraded():
     """Test: Verify degraded mode environment variable parsing."""
     import os
+
     from sdx.privacy.deidenitfier import _allow_degraded
 
     # Test default (false)
